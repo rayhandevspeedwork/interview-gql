@@ -1,5 +1,8 @@
-import { ApolloServer, gql } from 'apollo-server';
+import express from 'express';
+import { ApolloServer, gql } from 'apollo-server-express';
 import fetch from 'node-fetch';
+
+const app = express();
 
 // Define the GraphQL schema
 const typeDefs = gql`
@@ -85,7 +88,15 @@ const resolvers = {
 // Create an Apollo Server instance
 const server = new ApolloServer({ typeDefs, resolvers });
 
-// Start the server
-server.listen({ port: process.env.PORT || 8080 }).then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`);
-});
+// Apply Apollo middleware to Express app
+async function startServer() {
+  await server.start();
+  server.applyMiddleware({ app });
+
+  const PORT = process.env.PORT || 8080;
+  app.listen(PORT, () => {
+    console.log(`🚀 Server ready at http://localhost:${PORT}${server.graphqlPath}`);
+  });
+}
+
+startServer();
